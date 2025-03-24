@@ -26,7 +26,7 @@ void ReadVertex(EdbID id,TEnv &env);
 void MakeScanCondBT(EdbScanCond &cond, TEnv &env);
 void SetTracksErrors(TObjArray &tracks, EdbScanCond &cond, float p, float m);
 void do_vertex(TEnv &env);
-void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray &v_out, TNtuple* outTree);
+void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray &v_out, TObjArray &v_out2, TNtuple* outTree);
 bool IsCompatible(TEnv &env, EdbVertex &v, EdbTrackP &t, float *r2, float *dz);
 void Display( const char *dsname,  EdbVertexRec *evr, TEnv &env );
 
@@ -230,6 +230,7 @@ void ReadVertex(EdbID id, TEnv &env)
   TCut cutvtx      = env.GetValue("emvertex.vtx.cutvtx"        , "(flag==0||flag==3)&&n>4");
 
   TObjArray v_out;
+  TObjArray v_out2;
   
   EdbDataProc *dproc = new EdbDataProc();
   TString name;
@@ -243,9 +244,10 @@ void ReadVertex(EdbID id, TEnv &env)
       EdbPVRec *vtr = new EdbPVRec();
       vtr->SetScanCond( new EdbScanCond(gCond) );
       gSproc.ReadTracksTree( idset,*vtr, cuttr);
-      TNtuple *outTree = new TNtuple("tracks","Tree of matched tracks","chosen:n:vid:tid:nseg:npl:tx:ty:firstp:lastp:r2:dz:imp:imp2");
-      AddCompatibleTracks(env, *vtr, gAli , v_out, outTree);  // assign to the vertices of gAli additional tracks from vtr if any
+      TNtuple *outTree = new TNtuple("tracks","Tree of matched tracks","chosen:n:vid:tid:nseg:npl:tx:ty:firstp:lastp:r2:dz");
+      AddCompatibleTracks(env, *vtr, gAli , v_out, v_out2, outTree);  // assign to the vertices of gAli additional tracks from vtr if any
       EdbDataProc::MakeVertexTree(v_out,"flag0.vtx.root");
+      EdbDataProc::MakeVertexTree(v_out2,"flag1.vtx.root");
       TFile *outFile = new TFile("found_tracks.root","RECREATE");
       outTree->Write();
       outFile->Write();
@@ -325,7 +327,7 @@ void MakeScanCondBT(EdbScanCond &cond, TEnv &env)
   cond.SetName("SND_basetrack");
 }
 
-void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray &v_out, TNtuple* outTree)
+void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray &v_out, TObjArray &v_out2, TNtuple* outTree)
 {
   int ntr  = v_trk.Ntracks();
   int nvtx = v_vtx.Nvtx();
@@ -349,7 +351,7 @@ void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray 
       EdbTrackP *t = v_trk.GetTrack(it);
       int trid = t->ID();
       if (std::find(trackids.begin(), trackids.end(), trid)!=trackids.end()) continue;
-      if( IsCompatible(env, *v,*t, &r2, &dz, &imp, &imp2) ) {
+      if( IsCompatible(env, *v,*t, &r2, &dz) ) {
         flag1 = true;
         t->SetFlag(999999);
         if( r2 < r2max ) { r2max=r2; dzmax=dz; t_chosen=t; }
@@ -362,6 +364,7 @@ void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, TObjArray 
       v_vtx.AddTrack(t_chosen);
       outTree->Fill(1, founds, v->ID(), t_chosen->ID(), t_chosen->N(), t_chosen->Npl(), t_chosen->TX(), t_chosen->TY(), t_chosen->GetSegmentFirst()->Plate(), t_chosen->GetSegmentLast()->Plate(), r2max, dzmax);
       Log(1,"AddCompatibleTracks","Closest track found at r2=%.4f dz=%.2f\n",r2max,dzmax);
+      v_out2.Add(v);
     }
     else {
       v_out.Add(v);
