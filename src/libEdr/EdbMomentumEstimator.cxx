@@ -73,7 +73,7 @@ void EdbMomentumEstimator::Set0()
 void EdbMomentumEstimator::SetParPMS_Mag()
 {
   // set the default values for parameters used in PMS_Mag
-  eX0 = 5600;
+  eX0 = 3504;
 
   eDTsErrorFun.SetParameters(0.0021, 0.0054,0,0,0);
   eDTxErrorFun.SetParameters(0.0021, 0.0093,0,0,0);
@@ -626,13 +626,17 @@ float EdbMomentumEstimator::PMScoordinate(EdbTrackP &tr)
   eF1->SetParameter(0,5);                             // starting value for momentum in GeV
   eF1->SetParameter(1,10);                              // starting value for coordinate error  
 
-  const char *fitopt = "MQ"; //MQR
-  eG ->Fit(eF1, fitopt);
-  eGX->Fit(eF1X,fitopt);
-  eGY->Fit(eF1Y,fitopt);
+  const char *fitopt = "MQS"; //MQR
+  TFitResultPtr fitStatus = eG ->Fit(eF1, fitopt);
+  TFitResultPtr fitStatusX = eGX->Fit(eF1X,fitopt);
+  TFitResultPtr fitStatusY = eGY->Fit(eF1Y,fitopt);
 
+  if (fitStatus->IsValid()) {
+    eP  = 1./sqrt(eF1->GetParameter(0));
+  } else {
+    eP  = -10;
+  }
 
-  eP  = 1./sqrt(eF1->GetParameter(0));
   ePx = 1./sqrt(eF1X->GetParameter(0));
   ePy = 1./sqrt(eF1Y->GetParameter(0));
   return eP;
