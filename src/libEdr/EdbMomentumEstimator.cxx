@@ -21,6 +21,7 @@
 #include "EdbPhys.h"
 #include "EdbAffine.h"
 #include "EdbMomentumEstimator.h"
+#include "TFitResult.h"
 
 ClassImp(EdbMomentumEstimator);
 
