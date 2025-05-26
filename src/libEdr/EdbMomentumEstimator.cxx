@@ -508,8 +508,6 @@ float EdbMomentumEstimator::PMScoordinate(EdbTrackP &tr)
 
   gErrorIgnoreLevel = kError; // suppress MINUIT warnings
 
-  int trackEvt = tr.GetSegmentFirst()->MCEvt();
-
   int nseg = tr.N();
   int npl  = tr.Npl();
   
