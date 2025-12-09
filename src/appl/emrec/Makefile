@@ -29,7 +29,7 @@ TARGET	=	$(BIN_DIR)/emlink$(ExeSuf)      \
 
 ROOTLIBS      += -lMLP -lSpectrum
 ##PROJECT_LIBS += -L$(FEDRA_ROOT)/lib -lScan -lEdb -lEbase -lEmath -lEphys -lvt -lEdr -lScan -lEdr -lEIO -lEMC -lAlignment -lDataConversion -lShower -lTreePlayer
-PROJECT_LIBS += $(GLIBS) -L$(FEDRA_ROOT)/lib -lERootTools -lScan -lEdb -lEbase -lEmath -lEphys -lvt -lEdr -lScan -lEdr -lEIO -lEMC -lAlignment -lDataConversion -lEdd -lTreePlayer -lScan -lEdb -lEbase -lEmath -lEphys -lvt -lEdr -lScan -lEdr -lEIO -lEMC -lAlignment -lDataConversion -lEdd -lTreePlayer $(ROOTLIBS) $(GLIBS)
+PROJECT_LIBS += $(GLIBS) -L$(FEDRA_ROOT)/lib -lERootTools -lScan -lEdb -lEbase -lEmath -lEphys -lvt -lEdr -lScan -lEdr -lEIO -lEMC -lAlignment -lDataConversion -lEdd -lTreePlayer -lScan -lEdb -lEbase -lEmath -lEphys -lvt -lEdr -lScan -lEdr -lEIO -lEMC -lAlignment -lDataConversion -lEdd -lTreePlayer $(ROOTLIBS) $(GLIBS) -lEG
 
 #------------------------------------------------------------------------------
 include ../../config/TargetsDef.mk

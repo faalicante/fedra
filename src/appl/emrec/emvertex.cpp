@@ -10,7 +10,8 @@
 #include "EdbDisplay.h"
 #include "EdbCombGen.h"
 #include "EdbVertexComb.h"
-
+#include "TDatabasePDG.h"
+#include "TParticlePDG.h"
 #include <TROOT.h>
 
 using namespace std;
@@ -33,7 +34,7 @@ int last_trkID = -1;
 void VertexRec(EdbID id, TEnv &cenv);
 void ReadVertex(EdbID id,TEnv &env);
 void MakeScanCondBT(EdbScanCond &cond, TEnv &env);
-void SetTracksErrors(TObjArray &tracks, EdbScanCond &cond, float p, float m);
+void SetTracksErrors(TObjArray &tracks, EdbScanCond &cond);
 void do_vertex(TEnv &env);
 void AddCompatibleTracks(TEnv &env, EdbPVRec &v_trk, EdbPVRec &v_vtx, float r2max, float dzmax, TObjArray &v_out, TObjArray &v_out2, TNtuple* outTree);
 bool IsCompatible(EdbVertex &v, EdbTrackP &t, float r2max, float dzmax, float *r2, float *dz);
@@ -86,6 +87,7 @@ void set_default(TEnv &env)
 
   env.SetValue("emvertex.bt.Sigma0", "0.2 0.2 0.002 0.002" );
   env.SetValue("emvertex.bt.Degrad", 5. );
+  env.SetValue("emvertex.bt.RadX0", 3502 );
 }
 
 //---------------------------------------------------------------------
@@ -317,10 +319,10 @@ void do_vertex(TEnv &env)
 {
   //gAli.PrintSummary();
   bool do_trfit   = env.GetValue("emvertex.trfit.doit"     ,  1 );
-  float pfit      = env.GetValue("emvertex.trfit.P"        , 10 );
-  float mfit      = env.GetValue("emvertex.trfit.M"        ,  0.139);
+  // float pfit      = env.GetValue("emvertex.trfit.P"        , 10 );
+  // float mfit      = env.GetValue("emvertex.trfit.M"        ,  0.139);
   if(do_trfit) {
-    SetTracksErrors( *(gAli.eTracks), gCond, pfit,mfit );
+    SetTracksErrors( *(gAli.eTracks), gCond);
     //gAli.FitTracks(pfit,mfit );
   }
 
@@ -357,7 +359,7 @@ void MakeScanCondBT(EdbScanCond &cond, TEnv &env)
   cond.SetChi2Max( 6.5 );
   cond.SetChi2PMax( 6.5 );
   cond.SetChi2Mode( 3 );
-  cond.SetRadX0( 5810. );
+  cond.SetRadX0( env.GetValue("emvertex.bt.RadX0", 3502 ) );
   cond.SetName("SND_basetrack");
 }
 
@@ -587,15 +589,19 @@ void DiscardImp(TEnv &env, EdbPVRec &v_vtx, float imp_max)
   }
 }
 //-----------------------------------------------------------------------------
-void SetTracksErrors(TObjArray &tracks, EdbScanCond &cond, float p, float m)
+void SetTracksErrors(TObjArray &tracks, EdbScanCond &cond)
 {
+ //  TDatabasePDG *db = TDatabasePDG::Instance();
   int n = tracks.GetEntries();
-  Log(2,"SetTracksErrors","refit %d tracks with a new errors and p=%f m=%f",n,p,m);
   for(int i=0; i<n; i++) {
      EdbTrackP *t = (EdbTrackP*)tracks.At(i);
      int nseg = t->N();
-     t->SetSegmentsP(p);
-     t->SetM(m);
+     EdbSegP *s = t->GetSegmentFirst();
+     TParticlePDG *particle = TDatabasePDG::Instance()->GetParticle(s->Vid(0));
+     t->SetP(s->P());
+     t->SetM(particle->Mass());
+     particle->Print();
+     Log(2,"SetTracksErrors","refit %d tracks with a new errors and p=%f m=%f", s->P(), particle->Mass());
      for(int j=0; j<nseg; j++) {
        EdbSegP   *s = t->GetSegment(j);
        s->SetErrors0();
